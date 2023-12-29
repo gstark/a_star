@@ -14,14 +14,19 @@ jobs:
     strategy:
       matrix:
         ruby:
-          - '2.7.7'
+          - '3.2.0'
+          - '3.3.0'
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Ruby
-      uses: ruby/setup-ruby@v1
-      with:
-        ruby-version: ${{ matrix.ruby }}
-        bundler-cache: true
-    - name: Run the default task
-      run: bundle exec rake
+      - uses: actions/checkout@v3
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler-cache: true
+      - name: Run the test task
+        run: bundle exec rake test
+      - name: Run the RBS tests
+        run: rbs test --target "AStar::*" rake test
+      - name: Run standard
+        run: bundle exec standardrb

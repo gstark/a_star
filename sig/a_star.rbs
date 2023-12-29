@@ -1,4 +1,16 @@
 module AStar
   VERSION: String
-  # See the writing guide of rbs: https://github.com/ruby/rbs#guides
+
+  class Result < ::Data
+    def self.new: (Float score, Array path, Array visited) -> instance
+                | (score: Float, path: Array, visited: Array) -> instance
+
+    attr_reader score: Float
+
+    attr_reader path: Array
+
+    attr_reader visited: Array
+  end
+
+  def self.traverse: (start: Object, goal: Proc, neighbors: Proc, ?heuristic: Proc, ?weight: Proc, ?visit: Proc) -> Data
 end

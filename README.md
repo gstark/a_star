@@ -1,24 +1,146 @@
-# AStar
+# a_star
 
-TODO: Delete this and the text below, and describe your gem
+Implements the [A\* path search/traversal algorithm](https://en.wikipedia.org/wiki/A*_search_algorithm)
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/a_star`. To experiment with that code, run `bin/console` for an interactive prompt.
+The implementation defines a search method that accepts several procs/lambdas that configure the various behaviors of the search algorithm. This allows for highly customizable usage.
+
+This gem was extracted from solutions to the [Advent of Code](https://adventofcode.com).
 
 ## Installation
 
-TODO: Replace `UPDATE_WITH_YOUR_GEM_NAME_PRIOR_TO_RELEASE_TO_RUBYGEMS_ORG` with your gem name right after releasing it to RubyGems.org. Please do not do it earlier due to security reasons. Alternatively, replace this section with instructions to install your gem from git if you don't plan to release to RubyGems.org.
-
 Install the gem and add to the application's Gemfile by executing:
 
-    $ bundle add UPDATE_WITH_YOUR_GEM_NAME_PRIOR_TO_RELEASE_TO_RUBYGEMS_ORG
+    $ bundle add a_star
 
 If bundler is not being used to manage dependencies, install the gem by executing:
 
-    $ gem install UPDATE_WITH_YOUR_GEM_NAME_PRIOR_TO_RELEASE_TO_RUBYGEMS_ORG
+    $ gem install a_star
 
 ## Usage
 
-TODO: Write usage instructions here
+### Graphs
+
+If you had the simple graph:
+
+```mermaid
+graph LR;
+    a-->b;
+    a-->astray;
+    b-->c;
+    c-->d;
+```
+
+you could represent it in Ruby as hash of nodes to neighbors:
+
+```ruby
+graph = {
+  a: [:b, :astray],
+  b: [:c],
+  c: [:d],
+  astray: []
+}
+```
+
+Then you can use `AStar.traverse` to find the path from `:a` to `:d` with:
+
+```ruby
+results = AStar.traverse(
+  # Provide a starting node
+  start: :a,
+
+  # Test if this is the desired ending node `:d`
+  goal: proc { |node:| node == :d },
+
+  # Given a `node` fetch the neighbors, return an empty array for unknown nodes.
+  neighbors: proc { |node:, path:| graph.fetch(node, []) }
+)
+
+p results.path
+# => [:a, :b, :c, :d]
+```
+
+### Mazes
+
+Assume you had a maze represented by this ASCII diagram.
+We wish to start at "S" and end up at "E".
+
+```
+maze = <<~EOL
+:::::::::::::::::::::
+:S  :   : :   : :   :
+::: : : : : ::: : :::
+:   : : : : :     : :
+::: : ::: : : ::::: :
+:     : :   :     : :
+: ::: : ::: ::: : : :
+:   :   :   :   :   :
+: ::::: ::: : : :::::
+: : : :   : : :     :
+: : : : : : ::: ::: :
+:   :   : :       : :
+::: ::: : : ::: : : :
+:   :   :   : : : : :
+: ::::::: ::: : ::: :
+:     : :     :   : :
+: : ::: : ::::: ::: :
+: : : : : :     : : :
+::::: : ::::: ::: : :
+:                 :E:
+:::::::::::::::::::::
+EOL
+```
+
+You could turn this text into a 2-D array:
+
+```ruby
+maze_as_2d_grid = maze.split("\n").map(&:chars)
+```
+
+Set a starting position as an array of `row` and `col`umn. We could write code to locate the "S" in the maze or specify it's position as it is known.
+
+```ruby
+start = [1, 1]
+```
+
+Define a `goal` proc then returned `true` when the cell at `[row][col]` is `E`. Alternatively, we could compare the `row` and `col` values directly since the location of the end of the maze is a fixed position.
+
+```ruby
+goal = proc do |node:|
+  row, col = node
+
+  maze_as_2d_grid[row][col] == "E"
+end
+```
+
+Define a `neighbors` proc to return all the valid neighbors of any cell. That is, all of the locations one could navigate to from `[row][col]`
+
+Note that we do not check for out of bounds array access since our maze is nicely bordered by walls. If this were not the case we'd have to make sure we did not navigate outside the array.
+
+```ruby
+neighbors = proc do |node:, path:|
+  # decompose the row/col
+  row, col = node
+
+  directions = [
+    [+0, -1], # left
+    [+0, +1], # right
+    [-1, +0], # up
+    [+1, +0]  # down
+  ]
+
+  # Generate a set of new row/col neighbors
+  all_neighbors = directions.map { |delta_row, delta_col| [row + delta_row, col + delta_col] }
+
+  # We can go anywhere that isn't a wall (":")
+  all_neighbors.select { |row, col| maze_as_2d_grid[row][col] != ":" }
+end
+```
+
+Finally we can call `AStar.traverse` with these `proc`s
+
+```ruby
+results = AStar.traverse(start:, goal:, neighbors:)
+```
 
 ## Development
 

@@ -21,7 +21,7 @@ describe AStar do
       neighbors: proc { |node| graph.fetch(node, []) }
     )
 
-    assert_equal [], results.path
+    assert_equal [], results.path.to_a
     assert_nil results.score
     refute_empty results.visited
   end
@@ -40,7 +40,7 @@ describe AStar do
       neighbors: proc { |node| graph.fetch(node, []) }
     )
 
-    assert_equal [:a, :b, :c, :d], results.path
+    assert_equal [:a, :b, :c, :d], results.path.to_a
     assert_equal results.score, 0
     refute_empty results.visited
   end
@@ -56,15 +56,17 @@ describe AStar do
       astray: []
     }
 
-    AStar.traverse(
+    result = AStar.traverse(
       start: :a,
       goal: proc { |node| node == :d },
       neighbors: proc { |node| graph.fetch(node, []) },
       visit: proc do |node, path|
         visited_nodes << node
-        paths << path
+        paths << path.to_a
       end
     )
+
+    assert_equal [:a, :b, :c, :d], result.path.to_a
 
     # The algorithm will explore a => b, then a => astray.
     # Seeing there is nowhere to explore, returns to b. Then a => b,
@@ -91,7 +93,7 @@ describe AStar do
       weight: proc { 1 }
     )
 
-    assert_equal [:a, :b, :c, :d], results.path
+    assert_equal [:a, :b, :c, :d], results.path.to_a
     # The score is three since we traversed three edges, each with a weight of 1
     # a => b, b => c, c => d
     assert_equal results.score, 3
@@ -134,7 +136,7 @@ describe AStar do
       weight: proc { |node, neighbor| graph.fetch(node, {}).fetch(neighbor, 0) }
     )
 
-    assert_equal [:a, :x, :y, :z, :e], results.path
+    assert_equal [:a, :x, :y, :z, :e], results.path.to_a
     # The score is four since a => x => y => z => e totals 4
     assert_equal results.score, 4
     refute_empty results.visited
@@ -197,7 +199,7 @@ describe AStar do
       [11, 14], [11, 15], [10, 15], [9, 15], [9, 16], [9, 17], [9, 18], [9, 19], [10, 19], [11, 19], [12, 19], [13, 19], [14, 19],
       [15, 19], [16, 19], [17, 19], [18, 19], [19, 19]]
 
-    assert_equal expected_path, results.path
+    assert_equal expected_path, results.path.to_a
     assert_equal results.score, expected_path.length - 1 # Score is one less than the length since this counts edges, not nodes
     refute_empty results.visited
 
@@ -365,7 +367,7 @@ describe AStar do
       [73, 65], [74, 65], [75, 65], [76, 65], [77, 65], [77, 66], [77, 67], [77, 68], [77, 69], [77, 70], [77, 71], [77, 72],
       [77, 73], [77, 74], [77, 75], [77, 76], [77, 77], [78, 77], [79, 77], [79, 78], [79, 79]]
 
-    assert_equal expected_path, results.path
+    assert_equal expected_path, results.path.to_a
     assert_equal results.score, expected_path.length - 1 # Score is one less than the length since this counts edges, not nodes
     refute_empty results.visited
 
@@ -482,7 +484,7 @@ describe AStar do
       heuristic: proc { |node| heuristic_values.fetch(node, 0) }
     )
 
-    assert_equal [:a, :c, :d], results.path
+    assert_equal [:a, :c, :d], results.path.to_a
     assert_equal 0.68 + 0.67, results.score # (a=>c 0.68) + (c=>d 0.67)
     refute_empty results.visited
   end
@@ -504,7 +506,7 @@ describe AStar do
       heuristic: proc { |node| heuristic_values.fetch(node, 0) }
     )
 
-    assert_equal [:n5, :n2, :n1, :n0], results.path
+    assert_equal [:n5, :n2, :n1, :n0], results.path.to_a
   end
 
   def manhattan_directions

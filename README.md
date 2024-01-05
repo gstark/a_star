@@ -56,8 +56,13 @@ results = AStar.traverse(
 )
 
 p results.path
+# => #<Enumerator: #<Enumerator::Generator:0x0000000000000000>:each>
+
+p results.path.to_a
 # => [:a, :b, :c, :d]
 ```
+
+_NOTE:_ the `results.path` is an `Enumerator` and you must call enumerable like methods such as `each` in order to iterate the path. Alternatively you can call `to_a` to turn the enumerated result into a full array.
 
 ### Mazes
 

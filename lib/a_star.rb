@@ -73,13 +73,36 @@ module AStar
     # Initialize the priority queue of nodes with the current node and it's heuristic value
     open_set.push(OpenSet.new(node: start, cost: f_score[start]))
 
-    # Proc to turn our current came_from hash into an array of nodes.
-    reconstruct_path = proc do |came_from, node|
-      [node].tap do |total_path|
-        while came_from[node]
-          node = came_from[node]
-          total_path.unshift(node)
-        end
+    # Instantiate `node` here so that it is in the closure
+    # formed by the Enumerator below. This allows us to
+    # create the Enumerator *once* and reuse the object
+    # instead of creating it for each iteration of the
+    # algorithm's main processing. A hack, I know, but
+    # one that may give us a performance boost.
+    node = nil
+
+    # Reconstruct the path up to this point.
+    #
+    # NOTE: this is an enumerator so the receiver must
+    #       either use `each` or `to_a` or any other
+    #       enumerable to inspect the contents.
+    #
+    # NOTE: This allows us to pass the enumerator itself
+    #       without actually constructing the path. The
+    #       path is only created _if_ the caller iterates.
+    path = Enumerator.new do |yielder|
+      # Don't reuse `node` here since it
+      # would impact the outer context
+      current_node = node
+
+      full_path = [current_node]
+      while came_from[current_node]
+        current_node = came_from[current_node]
+        full_path.unshift(current_node)
+      end
+
+      full_path.each do |current_node|
+        yielder << current_node
       end
     end
 
@@ -87,13 +110,6 @@ module AStar
     until open_set.empty?
       # Get (and remove) the element with the lowest cost and retrieve the node
       node = open_set.pop.node
-
-      # Reconstruct the path up to this point.
-      #
-      # NOTE: it might be better to pass this as a lambda to anyone
-      #       who needs it, since this can be expensive to do for
-      #       each iteration
-      path = reconstruct_path.call(came_from, node)
 
       # Call the visit callback providing the the current node, and the path
       visit&.call(node, path)
@@ -128,7 +144,7 @@ module AStar
     end
 
     # There was no path so return a result indicating no path was found
-    Result.new(score: nil, path: [], visited: came_from.keys)
+    Result.new(score: nil, path: Enumerator.new {}, visited: came_from.keys)
   end
 
   private

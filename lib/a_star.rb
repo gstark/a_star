@@ -68,13 +68,13 @@ module AStar
 
     # A hash containing keys of nodes and values of the f_score
     f_score = {}
-    f_score[start] = heuristic&.call(node: start) || 0
+    f_score[start] = heuristic&.call(start) || 0
 
     # Initialize the priority queue of nodes with the current node and it's heuristic value
     open_set.push(OpenSet.new(node: start, cost: f_score[start]))
 
     # Proc to turn our current came_from hash into an array of nodes.
-    reconstruct_path = proc do |came_from:, node:|
+    reconstruct_path = proc do |came_from, node|
       [node].tap do |total_path|
         while came_from[node]
           node = came_from[node]
@@ -93,20 +93,20 @@ module AStar
       # NOTE: it might be better to pass this as a lambda to anyone
       #       who needs it, since this can be expensive to do for
       #       each iteration
-      path = reconstruct_path.call(came_from:, node:)
+      path = reconstruct_path.call(came_from, node)
 
       # Call the visit callback providing the the current node, and the path
-      visit&.call(node:, path:)
+      visit&.call(node, path)
 
       # If we received `true` from the goal proc, construct and return results
-      if goal.call(node:)
+      if goal.call(node)
         return Result.new(score: f_score[node], path:, visited: came_from.keys)
       end
 
       # For each neighbor of the current node
-      neighbors.call(node:, path:).each do |neighbor|
+      neighbors.call(node, path).each do |neighbor|
         # Compute the weight from start to the neighbor through the current node
-        tentative_g_score = g_score[node] + (weight&.call(node:, neighbor:) || 0)
+        tentative_g_score = g_score[node] + (weight&.call(node, neighbor) || 0)
 
         # If this path to neighbor is better than any previous one. Record it!
         if tentative_g_score < g_score[neighbor]
@@ -117,7 +117,7 @@ module AStar
           g_score[neighbor] = tentative_g_score
 
           # Store the cumulative weight plus the heuristic of traveling to this neighbor
-          f_score[neighbor] = tentative_g_score + (heuristic&.call(node: neighbor) || 0)
+          f_score[neighbor] = tentative_g_score + (heuristic&.call(neighbor) || 0)
 
           # Store this entry in the open set of nodes if it isn't already present
           unless open_set.include?(neighbor)

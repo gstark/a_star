@@ -17,8 +17,8 @@ describe AStar do
 
     results = AStar.traverse(
       start: :a,
-      goal: proc { |node:| node == :e },
-      neighbors: proc { |node:, **| graph.fetch(node, []) }
+      goal: proc { |node| node == :e },
+      neighbors: proc { |node| graph.fetch(node, []) }
     )
 
     assert_equal [], results.path
@@ -36,8 +36,8 @@ describe AStar do
 
     results = AStar.traverse(
       start: :a,
-      goal: proc { |node:| node == :d },
-      neighbors: proc { |node:, **| graph.fetch(node, []) }
+      goal: proc { |node| node == :d },
+      neighbors: proc { |node| graph.fetch(node, []) }
     )
 
     assert_equal [:a, :b, :c, :d], results.path
@@ -58,9 +58,9 @@ describe AStar do
 
     AStar.traverse(
       start: :a,
-      goal: proc { |node:| node == :d },
-      neighbors: proc { |node:, **| graph.fetch(node, []) },
-      visit: proc do |node:, path:|
+      goal: proc { |node| node == :d },
+      neighbors: proc { |node| graph.fetch(node, []) },
+      visit: proc do |node, path|
         visited_nodes << node
         paths << path
       end
@@ -85,8 +85,8 @@ describe AStar do
 
     results = AStar.traverse(
       start: :a,
-      goal: proc { |node:| node == :d },
-      neighbors: proc { |node:, **| graph.fetch(node, []) },
+      goal: proc { |node| node == :d },
+      neighbors: proc { |node| graph.fetch(node, []) },
       # Assign a weight of 1 for each node
       weight: proc { 1 }
     )
@@ -127,11 +127,11 @@ describe AStar do
 
     results = AStar.traverse(
       start: :a,
-      goal: proc { |node:| node == :e },
-      neighbors: proc { |node:, **| graph.fetch(node, {}).keys },
+      goal: proc { |node| node == :e },
+      neighbors: proc { |node| graph.fetch(node, {}).keys },
 
       # Look up the node in the graph and then find the neighbor, returning it's weight
-      weight: proc { |node:, neighbor:| graph.fetch(node, {}).fetch(neighbor, 0) }
+      weight: proc { |node, neighbor| graph.fetch(node, {}).fetch(neighbor, 0) }
     )
 
     assert_equal [:a, :x, :y, :z, :e], results.path
@@ -171,7 +171,7 @@ describe AStar do
     # The start is at 0-based offset row 1, column 1
     start = [1, 1]
 
-    goal = proc do |node:|
+    goal = proc do |node|
       row, col = node
       maze_as_2d_grid[row][col] == "E"
     end
@@ -179,7 +179,7 @@ describe AStar do
     # No cost to go any direction
     weight = proc { 1 }
 
-    neighbors = proc do |node:, **|
+    neighbors = proc do |node|
       # decompose the row/col
       row, col = node
 
@@ -326,7 +326,7 @@ describe AStar do
     # The start is at 0-based offset row 1, column 1
     start = [1, 1]
 
-    goal = proc do |node:|
+    goal = proc do |node|
       row, col = node
       maze_as_2d_grid[row][col] == "E"
     end
@@ -334,7 +334,7 @@ describe AStar do
     # No cost to go any direction
     weight = proc { 1 }
 
-    neighbors = proc do |node:, **|
+    neighbors = proc do |node|
       # decompose the row/col
       row, col = node
 
@@ -476,10 +476,10 @@ describe AStar do
 
     results = AStar.traverse(
       start: :a,
-      goal: proc { |node:| node == :d },
-      neighbors: proc { |node:, **| edges_and_weights.fetch(node, {}).keys },
-      weight: proc { |node:, neighbor:| edges_and_weights.fetch(node, {}).fetch(neighbor, 0) },
-      heuristic: proc { |node:| heuristic_values.fetch(node, 0) }
+      goal: proc { |node| node == :d },
+      neighbors: proc { |node| edges_and_weights.fetch(node, {}).keys },
+      weight: proc { |node, neighbor| edges_and_weights.fetch(node, {}).fetch(neighbor, 0) },
+      heuristic: proc { |node| heuristic_values.fetch(node, 0) }
     )
 
     assert_equal [:a, :c, :d], results.path
@@ -498,10 +498,10 @@ describe AStar do
 
     results = AStar.traverse(
       start: :n5,
-      goal: proc { |node:| node == :n0 },
-      neighbors: proc { |node:, **| edges_and_weights.fetch(node, {}).keys },
-      weight: proc { |node:, neighbor:| edges_and_weights.fetch(node, {}).fetch(neighbor, 0) },
-      heuristic: proc { |node:| heuristic_values.fetch(node, 0) }
+      goal: proc { |node| node == :n0 },
+      neighbors: proc { |node| edges_and_weights.fetch(node, {}).keys },
+      weight: proc { |node, neighbor| edges_and_weights.fetch(node, {}).fetch(neighbor, 0) },
+      heuristic: proc { |node| heuristic_values.fetch(node, 0) }
     )
 
     assert_equal [:n5, :n2, :n1, :n0], results.path
